@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  cron_server:
+    build:
+      context: ./cron-server
+    container_name: ${SERVER_NAME}
+    restart: unless-stopped
