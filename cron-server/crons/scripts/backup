@@ -1,0 +1,19 @@
+#!/bin/sh
+
+#Imprimimos los comandos para debug de variables
+#set -x
+
+#Cargamos Parametros
+source /home/db-backups/scripts/params
+
+# Dump MySQL
+mysqldump --no-tablespaces --default-character-set=utf8 --opt --routines --complete-insert --create-options --extended-insert=FALSE -u $MYSQL_USER -p$MYSQL_PASS -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_SCHEMA > $BACKUP_DIR/backup_mysql_$MYSQL_SCHEMA_$MARCA_TIEMPO.sql
+
+# Dump Mongo
+mongodump --authenticationDatabase=$MONGO_AUTH_DB -u=$MONGO_USER -p=$MONGO_PASS --archive=$BACKUP_DIR/backup_mongo_$MARCA_TIEMPO.gzip --gzip --host=$MONGO_CONN
+
+#Copiamos los archivos a servidor NAS
+smbclient -W WORKGROUP --user=$NAS_USER%$NAS_PASS -c 'cd '$NAS_DIR'; lcd /home/db-backups/dumps/; recurse; prompt; mput *' //$NAS_HOST/SharedFiles
+
+# Eliminamos los archivos
+rm $BACKUP_DIR/*
