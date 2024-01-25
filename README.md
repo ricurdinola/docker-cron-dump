@@ -40,7 +40,7 @@ El stack se compone de los siguientes elementos:
 * Un contenedor basado en Alpine Linux destinado a correr Crons.
 * Un cron configurado para ejecutarse todos los días a las 23:30. El archivo \cron-server\crons\root posee los comandos a ejecutar. El mismo se copia al contenedor durante su creación.
 * Una carpeta /cron-server/crons/scripts donde se encuentra un script `backup` que es ejecutado por el Cron. Posee un dump de Mysql y de MongoDB. 
-* Una carpeta /cron-server/crons/scripts donde se encuentra un archivo `param` de parametrizaciones, con los valores a utilizar en el script de backup.
+* Una carpeta /cron-server/crons/scripts donde se encuentra un archivo `param` de parametrizaciones, con los valores a utilizar en el script de backup. Se recomienda reemplazar los valores productivos mediante un pipeline y reemplazo de secrets
 * Un `Dockerfile` que copia los archivos dentro de los contenedores y configura una zona horaria para el contenedor.
 * Un `docker-compose` que posee comentadas las instrucciones de montaje de volúmenes, las cuales pueden ser utilizadas al modificar el script y verificar su funcionamiento.
 
