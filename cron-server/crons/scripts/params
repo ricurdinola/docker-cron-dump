@@ -16,3 +16,5 @@ NAS_HOST=10.10.10.2
 NAS_DIR=/Backups/dumps
 NAS_USER="user@dominio"
 NAS_PASS="Password#1234"
+
+SSL_SALT=$SSL_SALT$
