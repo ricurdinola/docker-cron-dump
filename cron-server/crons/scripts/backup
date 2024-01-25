@@ -7,10 +7,14 @@
 source /home/db-backups/scripts/params
 
 # Dump MySQL
-mysqldump --no-tablespaces --default-character-set=utf8 --opt --routines --complete-insert --create-options --extended-insert=FALSE -u $MYSQL_USER -p$MYSQL_PASS -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_SCHEMA > $BACKUP_DIR/backup_mysql_$MYSQL_SCHEMA_$MARCA_TIEMPO.sql
+mysqldump --max-allowed-packet=128M --net-buffer-length=8M --no-tablespaces --default-character-set=utf8 --opt --routines --databases --complete-insert --create-options --extended-insert=FALSE --events --triggers -u $MYSQL_USER -p$MYSQL_PASS -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_SCHEMA | openssl enc -aes-256-cbc -salt -k $SSL_SALT -out $BACKUP_DIR/backup_mysql_$MYSQL_SCHEMA_$MARCA_TIEMPO.sql.enc
+
+# Dump Usuarios y permisos
+mysql -u $MYSQL_USER -p$MYSQL_PASS -h $MYSQL_HOST --skip-column-names -A -e "SELECT CONCAT('SHOW GRANTS FOR ''',user,'''@''',host,''';') AS query FROM mysql.user WHERE user NOT IN ('root','pma','phpmyadmin','debian-sys-maint')" | mysql -u $MYSQL_USER -p$MYSQL_PASS -h $MYSQL_HOST --skip-column-names -A | sed -e 's/\\_/_/g' -e 's/$/;/g' -e '/SYSTEM_USER/d' | openssl enc -aes-256-cbc -salt -k $SSL_SALT -out $BACKUP_DIR/backup_permisos_mysql_$MYSQL_SCHEMA_$MARCA_TIEMPO.sql.enc
+mysql -u $MYSQL_USER -p$MYSQL_PASS -h $MYSQL_HOST --skip-column-names -A -e "SELECT CONCAT('CREATE USER \'', user, '\'@\'', host, '\' IDENTIFIED WITH \'mysql_native_password\' AS \'', authentication_string,'\';') FROM mysql.user WHERE user NOT IN ('mysql.infoschema','mysql.session','mysql.sys','debian-sys-maint','root');" | openssl enc -aes-256-cbc -salt -k $SSL_SALT -out $BACKUP_DIR/backup_usuarios_mysql_$MARCA_TIEMPO.sql.enc
 
 # Dump Mongo
-mongodump --authenticationDatabase=$MONGO_AUTH_DB -u=$MONGO_USER -p=$MONGO_PASS --archive=$BACKUP_DIR/backup_mongo_$MARCA_TIEMPO.gzip --gzip --host=$MONGO_CONN
+mongodump --authenticationDatabase=$MONGO_AUTH_DB -u=$MONGO_USER -p=$MONGO_PASS --archive --gzip --host=$MONGO_CONN | openssl enc -aes-256-cbc -salt -k $SSL_SALT -out $BACKUP_DIR/backup_mongo_$MARCA_TIEMPO.gzip.enc
 
 #Copiamos los archivos a servidor NAS
 smbclient -W WORKGROUP --user=$NAS_USER%$NAS_PASS -c 'cd '$NAS_DIR'; lcd /home/db-backups/dumps/; recurse; prompt; mput *' //$NAS_HOST/SharedFiles
